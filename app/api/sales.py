@@ -4,7 +4,7 @@ from typing import List
 
 from app.db.database import get_db
 from app.db.models import Sales
-from app.schema.sales import SalesCreate, SalesOut
+from app.schema.sales import SaleCreate, SaleOut
 from app.api.auth import get_current_user
 
 router = APIRouter(
@@ -14,13 +14,13 @@ router = APIRouter(
 
 
 # GET all sales records
-@router.get("/", response_model=List[SalesOut])
+@router.get("/", response_model=List[SaleOut])
 def get_sales(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     return db.query(Sales).all()
 
 
 # GET a single sales record
-@router.get("/{sales_id}", response_model=SalesOut)
+@router.get("/{sales_id}", response_model=SaleOut)
 def get_sales_record(
     sales_id: int, db: Session = Depends(get_db), user: dict = Depends(get_current_user)
 ):
@@ -31,9 +31,9 @@ def get_sales_record(
 
 
 # CREATE a new sales record
-@router.post("/", response_model=SalesOut, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=SaleOut, status_code=status.HTTP_201_CREATED)
 def create_sales_record(
-    sales: SalesCreate,
+    sales: SaleCreate,
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
@@ -58,10 +58,10 @@ def delete_sales_record(
 
 
 # UPDATE a sales record
-@router.put("/{sales_id}", response_model=SalesOut)
+@router.put("/{sales_id}", response_model=SaleOut)
 def update_sales_record(
     sales_id: int,
-    sales_data: SalesCreate,
+    sales_data: SaleCreate,
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
