@@ -3,6 +3,8 @@ from datetime import date, timedelta, datetime
 from faker import Faker
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
+import bcrypt
+import csv
 
 from app.db.database import Base, engine, SessionLocal
 from app.db.models import employee, department, sales, attendance, leave
@@ -35,23 +37,37 @@ def seed_departments() -> list[department.Department]:
 
 def seed_employees(departments: list[department.Department]) -> list[employee.Employee]:
     employees: list[employee.Employee] = []
-    for _ in range(100):
-        dept = random.choice(departments)
-        first_name = (fake.first_name(),)
-        last_name = (fake.last_name(),)
-        unique_id = random.randint(1000, 9999)
-        email = (f"{first_name}{last_name}{unique_id}@example.com",)
-        emp = employee.Employee(
-            first_name=first_name,
-            last_name=last_name,
-            email=email,
-            department_id=dept.id,
-            date_joined=fake.date_between(start_date="-3y", end_date="-30d"),
-        )
-        db.add(emp)
-        employees.append(emp)
+
+    with open("temp.csv", mode="w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(["first_name", "last_name", "email", "password"])  # header
+
+        for _ in range(100):
+            dept = random.choice(departments)
+            first_name = fake.first_name()
+            last_name = fake.last_name()
+            unique_id = random.randint(1000, 9999)
+            email = f"{first_name.lower()}.{last_name.lower()}{unique_id}@example.com"
+            raw_password = fake.password(length=10)
+            hashed_password = bcrypt.hashpw(raw_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+            emp = employee.Employee(
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                department_id=dept.id,
+                date_joined=fake.date_between(start_date="-3y", end_date="-30d"),
+                password=hashed_password,
+            )
+            db.add(emp)
+            employees.append(emp)
+
+            # Write plain password to CSV
+            writer.writerow([first_name, last_name, email, raw_password])
+
     db.commit()
     return employees
+
 
 
 def seed_sales(employees: list[employee.Employee]):
